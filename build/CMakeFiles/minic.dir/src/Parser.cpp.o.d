@@ -1,6 +1,6 @@
-CMakeFiles/minic.dir/src/main.cpp.o: \
- /home/qin/graduation/minic/src/main.cpp /usr/include/stdc-predef.h \
- /home/qin/graduation/minic/include/IRGenerator.h \
+CMakeFiles/minic.dir/src/Parser.cpp.o: \
+ /home/qin/graduation/minic/src/Parser.cpp /usr/include/stdc-predef.h \
+ /home/qin/graduation/minic/include/Parser.h \
  /home/qin/graduation/minic/include/AST.h /usr/include/c++/11/iosfwd \
  /usr/include/x86_64-linux-gnu/c++/11/bits/c++config.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/os_defines.h \
@@ -152,19 +152,8 @@ CMakeFiles/minic.dir/src/main.cpp.o: \
  /usr/include/c++/11/bits/stl_vector.h \
  /usr/include/c++/11/bits/stl_bvector.h \
  /usr/include/c++/11/bits/vector.tcc \
- /home/qin/graduation/minic/include/Lexer.h \
  /home/qin/graduation/minic/include/Token.h /usr/include/c++/11/cstddef \
- /home/qin/graduation/minic/include/MapleIRGenerator.h \
- /home/qin/graduation/minic/include/Parser.h \
- /usr/include/c++/11/stdexcept \
- /home/qin/graduation/minic/include/SemanticAnalyzer.h \
- /home/qin/graduation/minic/include/SymbolTable.h \
- /usr/include/c++/11/unordered_map /usr/include/c++/11/bits/hashtable.h \
- /usr/include/c++/11/bits/hashtable_policy.h \
- /usr/include/c++/11/bits/enable_special_members.h \
- /usr/include/c++/11/bits/node_handle.h \
- /usr/include/c++/11/bits/unordered_map.h \
- /usr/include/c++/11/bits/erase_if.h /usr/include/c++/11/fstream \
+ /usr/include/c++/11/stdexcept /usr/include/c++/11/sstream \
  /usr/include/c++/11/istream /usr/include/c++/11/ios \
  /usr/include/c++/11/bits/ios_base.h \
  /usr/include/c++/11/bits/locale_classes.h \
@@ -181,8 +170,5 @@ CMakeFiles/minic.dir/src/main.cpp.o: \
  /usr/include/c++/11/bits/locale_facets.tcc \
  /usr/include/c++/11/bits/basic_ios.tcc /usr/include/c++/11/ostream \
  /usr/include/c++/11/bits/ostream.tcc \
- /usr/include/c++/11/bits/istream.tcc /usr/include/c++/11/bits/codecvt.h \
- /usr/include/x86_64-linux-gnu/c++/11/bits/basic_file.h \
- /usr/include/x86_64-linux-gnu/c++/11/bits/c++io.h \
- /usr/include/c++/11/bits/fstream.tcc /usr/include/c++/11/iostream \
- /usr/include/c++/11/sstream /usr/include/c++/11/bits/sstream.tcc
+ /usr/include/c++/11/bits/istream.tcc \
+ /usr/include/c++/11/bits/sstream.tcc

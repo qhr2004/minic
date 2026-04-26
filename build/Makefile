@@ -129,6 +129,174 @@ minic/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/minic.dir/build.make CMakeFiles/minic.dir/build
 .PHONY : minic/fast
 
+src/AST.o: src/AST.cpp.o
+.PHONY : src/AST.o
+
+# target to build an object file
+src/AST.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minic.dir/build.make CMakeFiles/minic.dir/src/AST.cpp.o
+.PHONY : src/AST.cpp.o
+
+src/AST.i: src/AST.cpp.i
+.PHONY : src/AST.i
+
+# target to preprocess a source file
+src/AST.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minic.dir/build.make CMakeFiles/minic.dir/src/AST.cpp.i
+.PHONY : src/AST.cpp.i
+
+src/AST.s: src/AST.cpp.s
+.PHONY : src/AST.s
+
+# target to generate assembly for a file
+src/AST.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minic.dir/build.make CMakeFiles/minic.dir/src/AST.cpp.s
+.PHONY : src/AST.cpp.s
+
+src/IRGenerator.o: src/IRGenerator.cpp.o
+.PHONY : src/IRGenerator.o
+
+# target to build an object file
+src/IRGenerator.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minic.dir/build.make CMakeFiles/minic.dir/src/IRGenerator.cpp.o
+.PHONY : src/IRGenerator.cpp.o
+
+src/IRGenerator.i: src/IRGenerator.cpp.i
+.PHONY : src/IRGenerator.i
+
+# target to preprocess a source file
+src/IRGenerator.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minic.dir/build.make CMakeFiles/minic.dir/src/IRGenerator.cpp.i
+.PHONY : src/IRGenerator.cpp.i
+
+src/IRGenerator.s: src/IRGenerator.cpp.s
+.PHONY : src/IRGenerator.s
+
+# target to generate assembly for a file
+src/IRGenerator.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minic.dir/build.make CMakeFiles/minic.dir/src/IRGenerator.cpp.s
+.PHONY : src/IRGenerator.cpp.s
+
+src/Lexer.o: src/Lexer.cpp.o
+.PHONY : src/Lexer.o
+
+# target to build an object file
+src/Lexer.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minic.dir/build.make CMakeFiles/minic.dir/src/Lexer.cpp.o
+.PHONY : src/Lexer.cpp.o
+
+src/Lexer.i: src/Lexer.cpp.i
+.PHONY : src/Lexer.i
+
+# target to preprocess a source file
+src/Lexer.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minic.dir/build.make CMakeFiles/minic.dir/src/Lexer.cpp.i
+.PHONY : src/Lexer.cpp.i
+
+src/Lexer.s: src/Lexer.cpp.s
+.PHONY : src/Lexer.s
+
+# target to generate assembly for a file
+src/Lexer.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minic.dir/build.make CMakeFiles/minic.dir/src/Lexer.cpp.s
+.PHONY : src/Lexer.cpp.s
+
+src/MapleIRGenerator.o: src/MapleIRGenerator.cpp.o
+.PHONY : src/MapleIRGenerator.o
+
+# target to build an object file
+src/MapleIRGenerator.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minic.dir/build.make CMakeFiles/minic.dir/src/MapleIRGenerator.cpp.o
+.PHONY : src/MapleIRGenerator.cpp.o
+
+src/MapleIRGenerator.i: src/MapleIRGenerator.cpp.i
+.PHONY : src/MapleIRGenerator.i
+
+# target to preprocess a source file
+src/MapleIRGenerator.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minic.dir/build.make CMakeFiles/minic.dir/src/MapleIRGenerator.cpp.i
+.PHONY : src/MapleIRGenerator.cpp.i
+
+src/MapleIRGenerator.s: src/MapleIRGenerator.cpp.s
+.PHONY : src/MapleIRGenerator.s
+
+# target to generate assembly for a file
+src/MapleIRGenerator.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minic.dir/build.make CMakeFiles/minic.dir/src/MapleIRGenerator.cpp.s
+.PHONY : src/MapleIRGenerator.cpp.s
+
+src/Parser.o: src/Parser.cpp.o
+.PHONY : src/Parser.o
+
+# target to build an object file
+src/Parser.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minic.dir/build.make CMakeFiles/minic.dir/src/Parser.cpp.o
+.PHONY : src/Parser.cpp.o
+
+src/Parser.i: src/Parser.cpp.i
+.PHONY : src/Parser.i
+
+# target to preprocess a source file
+src/Parser.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minic.dir/build.make CMakeFiles/minic.dir/src/Parser.cpp.i
+.PHONY : src/Parser.cpp.i
+
+src/Parser.s: src/Parser.cpp.s
+.PHONY : src/Parser.s
+
+# target to generate assembly for a file
+src/Parser.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minic.dir/build.make CMakeFiles/minic.dir/src/Parser.cpp.s
+.PHONY : src/Parser.cpp.s
+
+src/SemanticAnalyzer.o: src/SemanticAnalyzer.cpp.o
+.PHONY : src/SemanticAnalyzer.o
+
+# target to build an object file
+src/SemanticAnalyzer.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minic.dir/build.make CMakeFiles/minic.dir/src/SemanticAnalyzer.cpp.o
+.PHONY : src/SemanticAnalyzer.cpp.o
+
+src/SemanticAnalyzer.i: src/SemanticAnalyzer.cpp.i
+.PHONY : src/SemanticAnalyzer.i
+
+# target to preprocess a source file
+src/SemanticAnalyzer.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minic.dir/build.make CMakeFiles/minic.dir/src/SemanticAnalyzer.cpp.i
+.PHONY : src/SemanticAnalyzer.cpp.i
+
+src/SemanticAnalyzer.s: src/SemanticAnalyzer.cpp.s
+.PHONY : src/SemanticAnalyzer.s
+
+# target to generate assembly for a file
+src/SemanticAnalyzer.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minic.dir/build.make CMakeFiles/minic.dir/src/SemanticAnalyzer.cpp.s
+.PHONY : src/SemanticAnalyzer.cpp.s
+
+src/SymbolTable.o: src/SymbolTable.cpp.o
+.PHONY : src/SymbolTable.o
+
+# target to build an object file
+src/SymbolTable.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minic.dir/build.make CMakeFiles/minic.dir/src/SymbolTable.cpp.o
+.PHONY : src/SymbolTable.cpp.o
+
+src/SymbolTable.i: src/SymbolTable.cpp.i
+.PHONY : src/SymbolTable.i
+
+# target to preprocess a source file
+src/SymbolTable.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minic.dir/build.make CMakeFiles/minic.dir/src/SymbolTable.cpp.i
+.PHONY : src/SymbolTable.cpp.i
+
+src/SymbolTable.s: src/SymbolTable.cpp.s
+.PHONY : src/SymbolTable.s
+
+# target to generate assembly for a file
+src/SymbolTable.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minic.dir/build.make CMakeFiles/minic.dir/src/SymbolTable.cpp.s
+.PHONY : src/SymbolTable.cpp.s
+
 src/main.o: src/main.cpp.o
 .PHONY : src/main.o
 
@@ -162,6 +330,27 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... minic"
+	@echo "... src/AST.o"
+	@echo "... src/AST.i"
+	@echo "... src/AST.s"
+	@echo "... src/IRGenerator.o"
+	@echo "... src/IRGenerator.i"
+	@echo "... src/IRGenerator.s"
+	@echo "... src/Lexer.o"
+	@echo "... src/Lexer.i"
+	@echo "... src/Lexer.s"
+	@echo "... src/MapleIRGenerator.o"
+	@echo "... src/MapleIRGenerator.i"
+	@echo "... src/MapleIRGenerator.s"
+	@echo "... src/Parser.o"
+	@echo "... src/Parser.i"
+	@echo "... src/Parser.s"
+	@echo "... src/SemanticAnalyzer.o"
+	@echo "... src/SemanticAnalyzer.i"
+	@echo "... src/SemanticAnalyzer.s"
+	@echo "... src/SymbolTable.o"
+	@echo "... src/SymbolTable.i"
+	@echo "... src/SymbolTable.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
