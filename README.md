@@ -1,6 +1,6 @@
 # MiniC Compiler
 
-A C++17 MiniC compiler project built with CMake. The current pipeline includes lexer, parser, AST, semantic analysis, three-address-code IR, and a simplified Maple-style IR.
+A C++17 MiniC compiler project built with CMake. The current pipeline includes lexer, parser, AST construction, semantic analysis, IR generation, and a simple code generation stage.
 
 ## Build
 
@@ -17,7 +17,46 @@ Run one MiniC source file:
 ./build/minic tests/basic.mc
 ```
 
-For valid programs, the compiler prints three-address-code IR first, then simplified Maple IR. For invalid programs, it prints a semantic error and exits with a non-zero status.
+For valid programs, the compiler prints the AST, three-address-code IR, and pseudo target code. For invalid programs, it prints an error and exits with a non-zero status.
+
+## Project Structure
+
+```text
+src/
+├── lexer/     # Token definitions and lexical analysis
+├── parser/    # Syntax analysis and AST construction
+├── ast/       # Shared AST node hierarchy
+├── semantic/  # Symbol table and semantic checks
+├── ir/        # IR container and AST-to-IR lowering
+├── codegen/   # IR-to-target translation
+└── main.cpp   # End-to-end compiler driver
+```
+
+## VS Code Run And Debug
+
+This project includes VS Code configuration under `.vscode/`.
+
+Build from VS Code:
+
+```text
+Terminal -> Run Build Task -> MiniC: build
+```
+
+Run custom MiniC source files:
+
+```text
+Terminal -> Run Task -> MiniC: run prompt source
+```
+
+The task prompts for a `.mc` file path. The default is `tests/basic.mc`.
+
+Debug custom MiniC source files:
+
+```text
+Run and Debug -> Debug MiniC: prompt source
+```
+
+This launches `build/minic` with the source file path as the program argument. A fixed `Debug MiniC: tests/basic.mc` configuration is also available.
 
 ## System Tests
 

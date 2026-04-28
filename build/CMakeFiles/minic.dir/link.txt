@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/minic.dir/src/main.cpp.o CMakeFiles/minic.dir/src/Lexer.cpp.o CMakeFiles/minic.dir/src/AST.cpp.o CMakeFiles/minic.dir/src/Parser.cpp.o CMakeFiles/minic.dir/src/SymbolTable.cpp.o CMakeFiles/minic.dir/src/SemanticAnalyzer.cpp.o CMakeFiles/minic.dir/src/IRGenerator.cpp.o CMakeFiles/minic.dir/src/MapleIRGenerator.cpp.o -o minic 

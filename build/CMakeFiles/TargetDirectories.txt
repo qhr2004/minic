@@ -1,3 +1,0 @@
-/home/qin/graduation/minic/build/CMakeFiles/minic.dir
-/home/qin/graduation/minic/build/CMakeFiles/edit_cache.dir
-/home/qin/graduation/minic/build/CMakeFiles/rebuild_cache.dir

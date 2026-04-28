@@ -1,0 +1,19 @@
+# build
+build/
+cmake-build-*/
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+Makefile
+
+# binary
+*.o
+*.out
+*.exe
+
+# vscode
+.vscode/
+
+# logs
+*.log
