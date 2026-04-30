@@ -12,6 +12,10 @@ bool isTypeKeyword(const Token& token) {
 
     return token.text == "int" || token.text == "float" || token.text == "char";
 }
+
+ExprPtr makeIdentifierCopy(const std::string& name) {
+    return std::make_unique<Identifier>(name);
+}
 }
 
 Parser::Parser(std::vector<Token> tokens)
@@ -98,6 +102,10 @@ StmtPtr Parser::parseStatement() {
         return parseWhileStmt();
     }
 
+    if (match(TokenType::KEYWORD, "for")) {
+        return parseForStmt();
+    }
+
     if (check(TokenType::DELIMITER, "{")) {
         return parseBlockStmt();
     }
@@ -153,6 +161,38 @@ StmtPtr Parser::parseWhileStmt() {
     return std::make_unique<WhileStmt>(std::move(condition), std::move(body));
 }
 
+StmtPtr Parser::parseForStmt() {
+    expect(TokenType::DELIMITER, "(", "expected '(' after 'for'");
+
+    StmtPtr initializer;
+    if (!check(TokenType::DELIMITER, ";")) {
+        if (isTypeKeyword(peek())) {
+            initializer = parseVarDeclStmt();
+        } else {
+            ExprPtr initExpr = parseExpression();
+            expect(TokenType::DELIMITER, ";", "expected ';' after for-loop initializer");
+            initializer = std::make_unique<ExprStmt>(std::move(initExpr));
+        }
+    } else {
+        expect(TokenType::DELIMITER, ";", "expected ';' after 'for' initializer");
+    }
+
+    ExprPtr condition;
+    if (!check(TokenType::DELIMITER, ";")) {
+        condition = parseExpression();
+    }
+    expect(TokenType::DELIMITER, ";", "expected ';' after for-loop condition");
+
+    ExprPtr update;
+    if (!check(TokenType::DELIMITER, ")")) {
+        update = parseExpression();
+    }
+    expect(TokenType::DELIMITER, ")", "expected ')' after for-loop update");
+
+    StmtPtr body = parseStatement();
+    return std::make_unique<ForStmt>(std::move(initializer), std::move(condition), std::move(update), std::move(body));
+}
+
 std::unique_ptr<BlockStmt> Parser::parseBlockStmt() {
     expect(TokenType::DELIMITER, "{", "expected '{' to start block");
     auto block = std::make_unique<BlockStmt>();
@@ -178,14 +218,26 @@ ExprPtr Parser::parseExpression() {
 ExprPtr Parser::parseAssignment() {
     ExprPtr expression = parseEquality();
 
-    if (match(TokenType::OPERATOR, "=")) {
+    if (match(TokenType::OPERATOR, "=")
+        || match(TokenType::OPERATOR, "+=")
+        || match(TokenType::OPERATOR, "-=")
+        || match(TokenType::OPERATOR, "*=")
+        || match(TokenType::OPERATOR, "/=")
+        || match(TokenType::OPERATOR, "%=")) {
         const auto* identifier = dynamic_cast<const IdentifierExpr*>(expression.get());
         if (identifier == nullptr) {
             throw errorAt(previous(), "invalid assignment target");
         }
 
+        const std::string assignmentOp = previous().text;
         std::string name = identifier->name();
         ExprPtr value = parseAssignment();
+
+        if (assignmentOp != "=") {
+            const std::string binaryOp(1, assignmentOp.front());
+            value = std::make_unique<BinaryExpr>(binaryOp, makeIdentifierCopy(name), std::move(value));
+        }
+
         return std::make_unique<AssignmentExpr>(std::move(name), std::move(value));
     }
 
@@ -231,19 +283,75 @@ ExprPtr Parser::parseExpr() {
 }
 
 ExprPtr Parser::parseTerm() {
-    ExprPtr expression = parseFactor();
+    ExprPtr expression = parseUnary();
 
     while (match(TokenType::OPERATOR, "*") || match(TokenType::OPERATOR, "/")
         || match(TokenType::OPERATOR, "%")) {
         std::string op = previous().text;
-        ExprPtr right = parseFactor();
+        ExprPtr right = parseUnary();
         expression = std::make_unique<BinaryExpr>(std::move(op), std::move(expression), std::move(right));
     }
 
     return expression;
 }
 
-ExprPtr Parser::parseFactor() {
+ExprPtr Parser::parseUnary() {
+    if (match(TokenType::OPERATOR, "!") || match(TokenType::OPERATOR, "-")) {
+        std::string op = previous().text;
+        ExprPtr operand = parseUnary();
+        return std::make_unique<UnaryExpr>(std::move(op), std::move(operand));
+    }
+
+    if (match(TokenType::OPERATOR, "++") || match(TokenType::OPERATOR, "--")) {
+        const std::string op = previous().text;
+        ExprPtr operand = parseUnary();
+        const auto* identifier = dynamic_cast<const IdentifierExpr*>(operand.get());
+
+        if (identifier == nullptr) {
+            throw errorAt(previous(), "increment/decrement operand must be an identifier");
+        }
+
+        return std::make_unique<IncDecExpr>(op, identifier->name(), false);
+    }
+
+    return parsePostfix();
+}
+
+ExprPtr Parser::parsePostfix() {
+    ExprPtr expression = parsePrimary();
+
+    while (true) {
+        if (match(TokenType::DELIMITER, "(")) {
+            const auto* identifier = dynamic_cast<const IdentifierExpr*>(expression.get());
+            if (identifier == nullptr) {
+                throw errorAt(previous(), "function call target must be an identifier");
+            }
+
+            std::vector<ExprPtr> arguments = parseArgumentList();
+            expect(TokenType::DELIMITER, ")", "expected ')' after argument list");
+            expression = std::make_unique<FunctionCall>(identifier->name(), std::move(arguments));
+            continue;
+        }
+
+        if (match(TokenType::OPERATOR, "++") || match(TokenType::OPERATOR, "--")) {
+            const std::string op = previous().text;
+            const auto* identifier = dynamic_cast<const IdentifierExpr*>(expression.get());
+
+            if (identifier == nullptr) {
+                throw errorAt(previous(), "increment/decrement operand must be an identifier");
+            }
+
+            expression = std::make_unique<IncDecExpr>(op, identifier->name(), true);
+            continue;
+        }
+
+        break;
+    }
+
+    return expression;
+}
+
+ExprPtr Parser::parsePrimary() {
     if (match(TokenType::INTEGER)) {
         return std::make_unique<Literal>(previous().text, LiteralKind::Integer);
     }
@@ -267,6 +375,21 @@ ExprPtr Parser::parseFactor() {
     }
 
     throw errorAt(peek(), "expected expression");
+}
+
+std::vector<ExprPtr> Parser::parseArgumentList() {
+    std::vector<ExprPtr> arguments;
+
+    if (check(TokenType::DELIMITER, ")")) {
+        return arguments;
+    }
+
+    arguments.push_back(parseExpression());
+    while (match(TokenType::DELIMITER, ",")) {
+        arguments.push_back(parseExpression());
+    }
+
+    return arguments;
 }
 
 const Token& Parser::peek(std::size_t offset) const {

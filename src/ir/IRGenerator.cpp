@@ -85,6 +85,11 @@ void IRGenerator::generateStmt(const Stmt& stmt) {
         return;
     }
 
+    if (const auto* forStmt = dynamic_cast<const ForStmt*>(&stmt)) {
+        generateForStmt(*forStmt);
+        return;
+    }
+
     throw std::runtime_error("IR generation error: unsupported statement node");
 }
 
@@ -137,6 +142,33 @@ void IRGenerator::generateWhileStmt(const WhileStmt& whileStmt) {
     emit(endLabel + ":");
 }
 
+void IRGenerator::generateForStmt(const ForStmt& forStmt) {
+    const std::string conditionLabel = newLabel();
+    const std::string updateLabel = newLabel();
+    const std::string endLabel = newLabel();
+
+    if (const Stmt* initializer = forStmt.initializer()) {
+        generateStmt(*initializer);
+    }
+
+    emit(conditionLabel + ":");
+
+    if (const Expr* condition = forStmt.condition()) {
+        const std::string conditionValue = generateExpr(*condition);
+        emit("ifFalse " + conditionValue + " goto " + endLabel);
+    }
+
+    generateStmt(forStmt.body());
+    emit(updateLabel + ":");
+
+    if (const Expr* update = forStmt.update()) {
+        generateExpr(*update);
+    }
+
+    emit("goto " + conditionLabel);
+    emit(endLabel + ":");
+}
+
 std::string IRGenerator::generateExpr(const Expr& expr) {
     if (const auto* integerExpr = dynamic_cast<const IntegerExpr*>(&expr)) {
         return integerExpr->value();
@@ -154,8 +186,16 @@ std::string IRGenerator::generateExpr(const Expr& expr) {
         return generateUnaryExpr(*unaryExpr);
     }
 
+    if (const auto* incDecExpr = dynamic_cast<const IncDecExpr*>(&expr)) {
+        return generateIncDecExpr(*incDecExpr);
+    }
+
     if (const auto* binaryExpr = dynamic_cast<const BinaryExpr*>(&expr)) {
         return generateBinaryExpr(*binaryExpr);
+    }
+
+    if (const auto* functionCall = dynamic_cast<const FunctionCall*>(&expr)) {
+        return generateFunctionCall(*functionCall);
     }
 
     throw std::runtime_error("IR generation error: unsupported expression node");
@@ -174,10 +214,43 @@ std::string IRGenerator::generateUnaryExpr(const UnaryExpr& unaryExpr) {
     return temp;
 }
 
+std::string IRGenerator::generateIncDecExpr(const IncDecExpr& incDecExpr) {
+    const std::string oldValue = newTemp();
+    emit(oldValue + " = " + incDecExpr.name());
+
+    const std::string updatedValue = newTemp();
+    const std::string op = incDecExpr.op() == "++" ? "+" : "-";
+    emit(updatedValue + " = " + incDecExpr.name() + " " + op + " 1");
+    emit(incDecExpr.name() + " = " + updatedValue);
+
+    if (incDecExpr.isPostfix()) {
+        return oldValue;
+    }
+
+    return updatedValue;
+}
+
 std::string IRGenerator::generateBinaryExpr(const BinaryExpr& binaryExpr) {
     const std::string left = generateExpr(binaryExpr.left());
     const std::string right = generateExpr(binaryExpr.right());
     const std::string temp = newTemp();
     emit(temp + " = " + left + " " + binaryExpr.op() + " " + right);
+    return temp;
+}
+
+std::string IRGenerator::generateFunctionCall(const FunctionCall& functionCall) {
+    std::vector<std::string> argumentValues;
+    argumentValues.reserve(functionCall.arguments().size());
+
+    for (const auto& argument : functionCall.arguments()) {
+        argumentValues.push_back(generateExpr(*argument));
+    }
+
+    for (const std::string& argumentValue : argumentValues) {
+        emit("param " + argumentValue);
+    }
+
+    const std::string temp = newTemp();
+    emit(temp + " = call " + functionCall.callee() + ", " + std::to_string(functionCall.arguments().size()));
     return temp;
 }

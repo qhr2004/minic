@@ -28,9 +28,12 @@ private:
     void generateReturnStmt(const ReturnStmt& returnStmt);
     void generateIfStmt(const IfStmt& ifStmt);
     void generateWhileStmt(const WhileStmt& whileStmt);
+    void generateForStmt(const ForStmt& forStmt);
 
     std::string generateExpr(const Expr& expr);
     std::string generateAssignmentExpr(const AssignmentExpr& assignmentExpr);
     std::string generateUnaryExpr(const UnaryExpr& unaryExpr);
+    std::string generateIncDecExpr(const IncDecExpr& incDecExpr);
     std::string generateBinaryExpr(const BinaryExpr& binaryExpr);
+    std::string generateFunctionCall(const FunctionCall& functionCall);
 };

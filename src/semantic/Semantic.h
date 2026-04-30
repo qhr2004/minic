@@ -40,6 +40,7 @@ private:
     void analyzeReturnStmt(const ReturnStmt& returnStmt);
     void analyzeIfStmt(const IfStmt& ifStmt);
     void analyzeWhileStmt(const WhileStmt& whileStmt);
+    void analyzeForStmt(const ForStmt& forStmt);
     void declareParameters(const FunctionDecl& functionDecl);
 
     ValueType analyzeExpr(const Expr& expr);
@@ -47,7 +48,9 @@ private:
     ValueType analyzeIdentifier(const Identifier& identifier);
     ValueType analyzeAssignmentExpr(const AssignmentExpr& assignmentExpr);
     ValueType analyzeUnaryExpr(const UnaryExpr& unaryExpr);
+    ValueType analyzeIncDecExpr(const IncDecExpr& incDecExpr);
     ValueType analyzeBinaryExpr(const BinaryExpr& binaryExpr);
+    ValueType analyzeFunctionCall(const FunctionCall& functionCall);
     ValueType resolveDeclaredType(const std::string& typeName, const std::string& context) const;
 
     void requireSameType(ValueType expected, ValueType actual, const std::string& context) const;

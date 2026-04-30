@@ -132,6 +132,11 @@ void SemanticAnalyzer::analyzeStmt(const Stmt& stmt) {
         return;
     }
 
+    if (const auto* forStmt = dynamic_cast<const ForStmt*>(&stmt)) {
+        analyzeForStmt(*forStmt);
+        return;
+    }
+
     throw SemanticError("unsupported statement node");
 }
 
@@ -179,6 +184,27 @@ void SemanticAnalyzer::analyzeWhileStmt(const WhileStmt& whileStmt) {
     analyzeStmt(whileStmt.body());
 }
 
+void SemanticAnalyzer::analyzeForStmt(const ForStmt& forStmt) {
+    symbols_.enterScope();
+
+    if (const Stmt* initializer = forStmt.initializer()) {
+        analyzeStmt(*initializer);
+    }
+
+    if (const Expr* condition = forStmt.condition()) {
+        const ValueType conditionType = analyzeExpr(*condition);
+        requireSameType(ValueType::Int, conditionType, "for condition");
+    }
+
+    analyzeStmt(forStmt.body());
+
+    if (const Expr* update = forStmt.update()) {
+        analyzeExpr(*update);
+    }
+
+    symbols_.exitScope();
+}
+
 void SemanticAnalyzer::declareParameters(const FunctionDecl& functionDecl) {
     for (const auto& parameter : functionDecl.parameters()) {
         const ValueType parameterType = resolveDeclaredType(
@@ -212,8 +238,16 @@ ValueType SemanticAnalyzer::analyzeExpr(const Expr& expr) {
         return analyzeUnaryExpr(*unaryExpr);
     }
 
+    if (const auto* incDecExpr = dynamic_cast<const IncDecExpr*>(&expr)) {
+        return analyzeIncDecExpr(*incDecExpr);
+    }
+
     if (const auto* binaryExpr = dynamic_cast<const BinaryExpr*>(&expr)) {
         return analyzeBinaryExpr(*binaryExpr);
+    }
+
+    if (const auto* functionCall = dynamic_cast<const FunctionCall*>(&expr)) {
+        return analyzeFunctionCall(*functionCall);
     }
 
     throw SemanticError("unsupported expression node");
@@ -272,6 +306,24 @@ ValueType SemanticAnalyzer::analyzeUnaryExpr(const UnaryExpr& unaryExpr) {
     return operandType;
 }
 
+ValueType SemanticAnalyzer::analyzeIncDecExpr(const IncDecExpr& incDecExpr) {
+    const Symbol* symbol = symbols_.lookup(incDecExpr.name());
+
+    if (symbol == nullptr) {
+        throw SemanticError("undeclared variable '" + incDecExpr.name() + "'");
+    }
+
+    if (symbol->kind == SymbolKind::Function) {
+        throw SemanticError("cannot apply '" + incDecExpr.op() + "' to function '" + incDecExpr.name() + "'");
+    }
+
+    if (!isNumericType(symbol->type)) {
+        throw SemanticError("operator '" + incDecExpr.op() + "' requires a numeric operand");
+    }
+
+    return symbol->type;
+}
+
 ValueType SemanticAnalyzer::analyzeBinaryExpr(const BinaryExpr& binaryExpr) {
     const ValueType leftType = analyzeExpr(binaryExpr.left());
     const ValueType rightType = analyzeExpr(binaryExpr.right());
@@ -319,6 +371,29 @@ ValueType SemanticAnalyzer::analyzeBinaryExpr(const BinaryExpr& binaryExpr) {
     }
 
     throw SemanticError("unsupported binary operator '" + op + "'");
+}
+
+ValueType SemanticAnalyzer::analyzeFunctionCall(const FunctionCall& functionCall) {
+    const auto found = functions_.find(functionCall.callee());
+    if (found == functions_.end()) {
+        throw SemanticError("undeclared function '" + functionCall.callee() + "'");
+    }
+
+    const FunctionSignature& signature = found->second;
+    if (signature.parameterTypes.size() != functionCall.arguments().size()) {
+        throw SemanticError(
+            "function '" + functionCall.callee() + "' expects "
+            + std::to_string(signature.parameterTypes.size()) + " argument(s), got "
+            + std::to_string(functionCall.arguments().size()));
+    }
+
+    for (std::size_t index = 0; index < functionCall.arguments().size(); ++index) {
+        const ValueType actualType = analyzeExpr(*functionCall.arguments()[index]);
+        requireSameType(signature.parameterTypes[index], actualType,
+                        "argument " + std::to_string(index + 1) + " of function '" + functionCall.callee() + "'");
+    }
+
+    return signature.returnType;
 }
 
 ValueType SemanticAnalyzer::resolveDeclaredType(const std::string& typeName, const std::string& context) const {

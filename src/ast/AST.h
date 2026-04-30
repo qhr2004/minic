@@ -154,6 +154,23 @@ private:
     StmtPtr body_;
 };
 
+class ForStmt : public Stmt {
+public:
+    ForStmt(StmtPtr initializer, ExprPtr condition, ExprPtr update, StmtPtr body);
+
+    const Stmt* initializer() const;
+    const Expr* condition() const;
+    const Expr* update() const;
+    const Stmt& body() const;
+    void print(std::ostream& os, int indent = 0) const override;
+
+private:
+    StmtPtr initializer_;
+    ExprPtr condition_;
+    ExprPtr update_;
+    StmtPtr body_;
+};
+
 class Literal : public Expr {
 public:
     Literal(std::string value, LiteralKind kind);
@@ -208,6 +225,21 @@ private:
     ExprPtr operand_;
 };
 
+class IncDecExpr : public Expr {
+public:
+    IncDecExpr(std::string op, std::string name, bool isPostfix);
+
+    const std::string& op() const;
+    const std::string& name() const;
+    bool isPostfix() const;
+    void print(std::ostream& os, int indent = 0) const override;
+
+private:
+    std::string op_;
+    std::string name_;
+    bool isPostfix_ = false;
+};
+
 class BinaryExpr : public Expr {
 public:
     BinaryExpr(std::string op, ExprPtr left, ExprPtr right);
@@ -221,4 +253,17 @@ private:
     std::string op_;
     ExprPtr left_;
     ExprPtr right_;
+};
+
+class FunctionCall : public Expr {
+public:
+    FunctionCall(std::string callee, std::vector<ExprPtr> arguments);
+
+    const std::string& callee() const;
+    const std::vector<ExprPtr>& arguments() const;
+    void print(std::ostream& os, int indent = 0) const override;
+
+private:
+    std::string callee_;
+    std::vector<ExprPtr> arguments_;
 };

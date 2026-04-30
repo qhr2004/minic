@@ -1,0 +1,22 @@
+var i
+i = 3
+var sum
+sum = 0
+%t0 = i > 1
+ifFalse %t0 goto L0
+%t1 = sum + i
+sum = %t1
+goto L1
+L0:
+%t2 = sum - 1
+sum = %t2
+L1:
+L2:
+ifFalse i goto L3
+%t3 = sum + i
+sum = %t3
+%t4 = i - 1
+i = %t4
+goto L2
+L3:
+return sum

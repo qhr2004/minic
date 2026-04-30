@@ -220,6 +220,51 @@ void WhileStmt::print(std::ostream& os, int indent) const {
     body_->print(os, indent + 4);
 }
 
+ForStmt::ForStmt(StmtPtr initializer, ExprPtr condition, ExprPtr update, StmtPtr body)
+    : initializer_(std::move(initializer)),
+      condition_(std::move(condition)),
+      update_(std::move(update)),
+      body_(std::move(body)) {}
+
+const Stmt* ForStmt::initializer() const {
+    return initializer_.get();
+}
+
+const Expr* ForStmt::condition() const {
+    return condition_.get();
+}
+
+const Expr* ForStmt::update() const {
+    return update_.get();
+}
+
+const Stmt& ForStmt::body() const {
+    return *body_;
+}
+
+void ForStmt::print(std::ostream& os, int indent) const {
+    printIndent(os, indent);
+    os << "ForStmt\n";
+
+    if (initializer_) {
+        printChildLabel(os, indent + 2, "Initializer");
+        initializer_->print(os, indent + 4);
+    }
+
+    if (condition_) {
+        printChildLabel(os, indent + 2, "Condition");
+        condition_->print(os, indent + 4);
+    }
+
+    if (update_) {
+        printChildLabel(os, indent + 2, "Update");
+        update_->print(os, indent + 4);
+    }
+
+    printChildLabel(os, indent + 2, "Body");
+    body_->print(os, indent + 4);
+}
+
 Literal::Literal(std::string value, LiteralKind kind)
     : value_(std::move(value)),
       kind_(kind) {}
@@ -285,6 +330,28 @@ void UnaryExpr::print(std::ostream& os, int indent) const {
     operand_->print(os, indent + 2);
 }
 
+IncDecExpr::IncDecExpr(std::string op, std::string name, bool isPostfix)
+    : op_(std::move(op)),
+      name_(std::move(name)),
+      isPostfix_(isPostfix) {}
+
+const std::string& IncDecExpr::op() const {
+    return op_;
+}
+
+const std::string& IncDecExpr::name() const {
+    return name_;
+}
+
+bool IncDecExpr::isPostfix() const {
+    return isPostfix_;
+}
+
+void IncDecExpr::print(std::ostream& os, int indent) const {
+    printIndent(os, indent);
+    os << "IncDecExpr " << (isPostfix_ ? "postfix " : "prefix ") << op_ << ' ' << name_ << "\n";
+}
+
 BinaryExpr::BinaryExpr(std::string op, ExprPtr left, ExprPtr right)
     : op_(std::move(op)),
       left_(std::move(left)),
@@ -307,4 +374,25 @@ void BinaryExpr::print(std::ostream& os, int indent) const {
     os << "BinaryExpr " << op_ << "\n";
     left_->print(os, indent + 2);
     right_->print(os, indent + 2);
+}
+
+FunctionCall::FunctionCall(std::string callee, std::vector<ExprPtr> arguments)
+    : callee_(std::move(callee)),
+      arguments_(std::move(arguments)) {}
+
+const std::string& FunctionCall::callee() const {
+    return callee_;
+}
+
+const std::vector<ExprPtr>& FunctionCall::arguments() const {
+    return arguments_;
+}
+
+void FunctionCall::print(std::ostream& os, int indent) const {
+    printIndent(os, indent);
+    os << "FunctionCall " << callee_ << "\n";
+
+    for (const auto& argument : arguments_) {
+        argument->print(os, indent + 2);
+    }
 }

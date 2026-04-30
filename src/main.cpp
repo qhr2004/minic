@@ -2,6 +2,7 @@
 #include "ir/IRGenerator.h"
 #include "lexer/Lexer.h"
 #include "lexer/Token.h"
+#include "maple/IRGenerator.h"
 #include "parser/Parser.h"
 #include "semantic/SemanticAnalyzer.h"
 
@@ -38,9 +39,15 @@ void printTokens(const std::vector<Token>& tokens) {
 int main(int argc, char* argv[]) {
     const bool tokenMode = argc >= 3 && std::string(argv[1]) == "--tokens";
     const bool exprMode = argc >= 3 && std::string(argv[1]) == "--expr";
+    const bool emitMapleMode = argc >= 4 && std::string(argv[1]) == "--emit-maple";
+    const bool emitABCMode = argc >= 4 && std::string(argv[1]) == "--emit-abc";
     const std::string sourcePath = tokenMode
         ? argv[2]
-        : (exprMode ? "" : (argc >= 2 ? argv[1] : "tests/test.mc"));
+        : (exprMode ? ""
+                    : ((emitMapleMode || emitABCMode)
+                           ? argv[2]
+                           : (argc >= 2 ? argv[1] : "tests/test.mc")));
+    const std::string outputPath = (emitMapleMode || emitABCMode) ? argv[3] : "";
 
     try {
         std::string source = exprMode ? argv[2] : readFile(sourcePath);
@@ -64,6 +71,20 @@ int main(int argc, char* argv[]) {
 
         SemanticAnalyzer semanticAnalyzer;
         semanticAnalyzer.analyze(*program);
+
+        if (emitMapleMode) {
+            maple::IRGenerator mapleGenerator;
+            mapleGenerator.generate(*program);
+            mapleGenerator.writeToFile(outputPath);
+            std::cout << "Maple IR written to " << outputPath << std::endl;
+            return 0;
+        }
+
+        if (emitABCMode) {
+            const std::string abcPath = maple::generate_abc(*program, outputPath);
+            std::cout << "ABC written to " << abcPath << std::endl;
+            return 0;
+        }
 
         IRGenerator irGenerator;
         const IRModule& irModule = irGenerator.generate(*program);

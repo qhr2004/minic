@@ -31,15 +31,19 @@ private:
     StmtPtr parseReturnStmt();
     StmtPtr parseIfStmt();
     StmtPtr parseWhileStmt();
+    StmtPtr parseForStmt();
     std::unique_ptr<BlockStmt> parseBlockStmt();
     StmtPtr parseExprStmt();
+    std::vector<ExprPtr> parseArgumentList();
 
     ExprPtr parseAssignment();
     ExprPtr parseEquality();
     ExprPtr parseComparison();
     ExprPtr parseExpr();
     ExprPtr parseTerm();
-    ExprPtr parseFactor();
+    ExprPtr parseUnary();
+    ExprPtr parsePostfix();
+    ExprPtr parsePrimary();
 
     const Token& peek(std::size_t offset = 0) const;
     const Token& previous() const;

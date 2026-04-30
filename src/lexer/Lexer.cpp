@@ -63,6 +63,9 @@ Token Lexer::nextToken() {
     }
 
     if (((ch == '=' || ch == '!' || ch == '<' || ch == '>') && peek(1) == '=')
+        || ((ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%') && peek(1) == '=')
+        || (ch == '+' && peek(1) == '+')
+        || (ch == '-' && peek(1) == '-')
         || (ch == '&' && peek(1) == '&')
         || (ch == '|' && peek(1) == '|')) {
         const int startLine = line_;
