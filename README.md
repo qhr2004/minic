@@ -48,6 +48,46 @@ src/
 └── main.cpp   # End-to-end compiler driver
 ```
 
+## Pipeline Overview
+
+```text
+MiniC Source
+  ↓
+Lexer
+  ↓
+Parser
+  ↓
+AST
+  ↓
+Semantic Analyzer
+  ↓
+TAC IR
+  ↓
+Maple IR (.mpl)
+  ↓
+Ark Backend Handoff
+  ↓
+ABC Placeholder / Future Real ABC
+```
+
+The current ABC stage depends on `MINIC_ARK_BACKEND_CMD`. The compiler first emits Maple IR, then substitutes `{input}` with the generated `.mpl` path and `{output}` with the requested `.abc` path before invoking the external command template.
+
+## MiniC Feature Support
+
+| Status | Feature area | Current support |
+| --- | --- | --- |
+| Supported | Core syntax | `int` / `float` / `char` local variables and literals, blocks, `if-else`, `while`, `for`, `return`, function definitions, function calls, prefix/postfix `++` / `--`, and compound assignments |
+| Supported | Semantic checks | Nested scopes, duplicate declaration / duplicate parameter detection, undeclared identifier detection, exact type checking, and `int` conditions for `if` / `while` / `for` |
+| Supported | Output stages | AST dump, string-based TAC IR, pseudo target dump, AST-to-Maple IR lowering, and external ABC handoff through `--emit-abc` |
+| Partial | Type-aware IR | AST-to-Maple lowering preserves declared types, but the current TAC IR container is string-based and mostly lowered as `i32` |
+| Partial | Backend integration | `--emit-abc` can invoke an external Ark backend command, but the real toolchain command line is still configured out-of-band via `MINIC_ARK_BACKEND_CMD` and the current `.abc` result may only be a handoff placeholder |
+| Partial | Regression coverage | Control flow, function calls, and increment expressions are covered by `ctest`; float / char paths and several semantic negative cases are currently documented and runnable, but not all are wired into `ctest` |
+| Not yet | Richer MiniC data model | Arrays, pointers, strings, structs, global storage, and function prototypes are not implemented |
+| Not yet | Additional statements | `break`, `continue`, `switch`, and `do-while` are not implemented |
+| Not yet | Runtime / library | Standard library functions, built-in I/O, and a fixed runtime environment are not implemented |
+
+See [docs/implementation_report.md](docs/implementation_report.md) and [docs/testing_report.md](docs/testing_report.md) for the graduation-project oriented implementation and testing summaries.
+
 ## Maple IR / Ark Backend
 
 `src/maple/IRGenerator.h` and `src/maple/IRGenerator.cpp` implement a dedicated Maple lowering layer. The code is split by AST node kind so future nodes such as `ForStmt`, function calls, or richer IR instructions can be added without reworking the whole backend.
@@ -151,6 +191,13 @@ Direct ABC example:
 export MINIC_ARK_BACKEND_CMD='your-ark-backend --input {input} --output {output}'
 ./build/minic --emit-abc tests/nested_increment_call.mc build/nested_increment_call.abc
 ```
+
+## Current Limitations
+
+- TAC IR is weakly typed. AST-to-Maple lowering preserves declared types, but TAC-to-Maple lowering mostly falls back to `i32`.
+- The MiniC subset does not include a standard library or runtime support such as built-in I/O.
+- The real Ark backend command is not fixed in the repository and still depends on `MINIC_ARK_BACKEND_CMD`.
+- The current `.abc` output should be treated as a handoff verification artifact unless a real external Ark backend is configured. See [docs/ark_backend_investigation.md](docs/ark_backend_investigation.md).
 
 ## VS Code Run And Debug
 
