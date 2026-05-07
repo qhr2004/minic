@@ -10,6 +10,9 @@
 #include <sstream>
 #include <stdexcept>
 #include <utility>
+#if !defined(_WIN32)
+#include <sys/wait.h>
+#endif
 
 namespace maple {
 
@@ -131,6 +134,24 @@ std::string backendTemplateFromConfig(const BackendConfig& config) {
     return env;
 }
 
+int decodeCommandExitCode(int status) {
+    if (status == -1) {
+        return -1;
+    }
+
+#if !defined(_WIN32)
+    if (WIFEXITED(status)) {
+        return WEXITSTATUS(status);
+    }
+
+    if (WIFSIGNALED(status)) {
+        return 128 + WTERMSIG(status);
+    }
+#endif
+
+    return status;
+}
+
 std::string invokeBackend(const Module& module, const std::string& outputPath, const BackendConfig& config) {
     const std::string mplPath = replaceExtension(outputPath, ".mpl");
     std::ofstream file(mplPath);
@@ -145,20 +166,36 @@ std::string invokeBackend(const Module& module, const std::string& outputPath, c
     std::string commandTemplate = backendTemplateFromConfig(config);
     if (commandTemplate.empty()) {
         throw std::runtime_error(
-            "Maple IR generated at '" + mplPath
-            + "', but Ark backend is not configured. Set MINIC_ARK_BACKEND_CMD to a shell template using {input} and {output}.");
+            "MINIC_ARK_BACKEND_CMD is not set\n"
+            "Maple IR kept at: " + mplPath);
     }
 
-    if (commandTemplate.find("{input}") == std::string::npos || commandTemplate.find("{output}") == std::string::npos) {
-        throw std::runtime_error("MINIC_ARK_BACKEND_CMD must contain both {input} and {output} placeholders");
+    std::vector<std::string> missingPlaceholders;
+    if (commandTemplate.find("{input}") == std::string::npos) {
+        missingPlaceholders.push_back("{input}");
+    }
+
+    if (commandTemplate.find("{output}") == std::string::npos) {
+        missingPlaceholders.push_back("{output}");
+    }
+
+    if (!missingPlaceholders.empty()) {
+        throw std::runtime_error(
+            "MINIC_ARK_BACKEND_CMD must contain " + join(missingPlaceholders, " and ")
+            + "\nMaple IR kept at: " + mplPath);
     }
 
     std::string command = replacePlaceholder(commandTemplate, "{input}", shellQuote(mplPath));
     command = replacePlaceholder(command, "{output}", shellQuote(outputPath));
 
-    const int exitCode = std::system(command.c_str());
-    if (exitCode != 0) {
-        throw std::runtime_error("Ark backend command failed with exit code " + std::to_string(exitCode) + ": " + commandTemplate);
+    const int rawStatus = std::system(command.c_str());
+    const int exitCode = decodeCommandExitCode(rawStatus);
+    if (rawStatus != 0) {
+        throw std::runtime_error(
+            "Ark backend command failed\n"
+            "command: " + command + "\n"
+            "exit code: " + std::to_string(exitCode) + "\n"
+            "Maple IR kept at: " + mplPath);
     }
 
     return outputPath;

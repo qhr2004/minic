@@ -1,7 +1,9 @@
+#include "ast/DotExporter.h"
 #include "codegen/CodeGenerator.h"
 #include "ir/IRGenerator.h"
 #include "lexer/Lexer.h"
 #include "lexer/Token.h"
+#include "maple/CFGDotExporter.h"
 #include "maple/IRGenerator.h"
 #include "parser/Parser.h"
 #include "semantic/SemanticAnalyzer.h"
@@ -39,15 +41,17 @@ void printTokens(const std::vector<Token>& tokens) {
 int main(int argc, char* argv[]) {
     const bool tokenMode = argc >= 3 && std::string(argv[1]) == "--tokens";
     const bool exprMode = argc >= 3 && std::string(argv[1]) == "--expr";
+    const bool emitASTDotMode = argc >= 4 && std::string(argv[1]) == "--emit-ast-dot";
+    const bool emitCFGDotMode = argc >= 4 && std::string(argv[1]) == "--emit-cfg-dot";
     const bool emitMapleMode = argc >= 4 && std::string(argv[1]) == "--emit-maple";
     const bool emitABCMode = argc >= 4 && std::string(argv[1]) == "--emit-abc";
     const std::string sourcePath = tokenMode
         ? argv[2]
         : (exprMode ? ""
-                    : ((emitMapleMode || emitABCMode)
+                    : ((emitASTDotMode || emitCFGDotMode || emitMapleMode || emitABCMode)
                            ? argv[2]
                            : (argc >= 2 ? argv[1] : "tests/test.mc")));
-    const std::string outputPath = (emitMapleMode || emitABCMode) ? argv[3] : "";
+    const std::string outputPath = (emitASTDotMode || emitCFGDotMode || emitMapleMode || emitABCMode) ? argv[3] : "";
 
     try {
         std::string source = exprMode ? argv[2] : readFile(sourcePath);
@@ -69,8 +73,34 @@ int main(int argc, char* argv[]) {
 
         std::unique_ptr<Program> program = parser.parseProgram();
 
+        if (emitASTDotMode) {
+            std::ofstream file(outputPath);
+
+            if (!file.is_open()) {
+                throw std::runtime_error("Cannot open file: " + outputPath);
+            }
+
+            writeASTDot(*program, file);
+            std::cout << "AST DOT written to " << outputPath << std::endl;
+            return 0;
+        }
+
         SemanticAnalyzer semanticAnalyzer;
         semanticAnalyzer.analyze(*program);
+
+        if (emitCFGDotMode) {
+            maple::IRGenerator mapleGenerator;
+            const maple::Module& module = mapleGenerator.generate(*program);
+            std::ofstream file(outputPath);
+
+            if (!file.is_open()) {
+                throw std::runtime_error("Cannot open file: " + outputPath);
+            }
+
+            maple::writeCFGDot(module, file);
+            std::cout << "CFG DOT written to " << outputPath << std::endl;
+            return 0;
+        }
 
         if (emitMapleMode) {
             maple::IRGenerator mapleGenerator;

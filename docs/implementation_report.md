@@ -281,13 +281,16 @@ for_end
 - `ctest` 自动回归：重点验证 Maple lowering 和 ABC handoff 关键模式
 - `tests/*.mc` 手工 / 冒烟样例：覆盖语法、语义错误与边界情况
 
-自动回归样例：
+自动回归样例当前已经扩展为多组：
 
 | 测试名 | 入口 | 关注点 |
 | --- | --- | --- |
 | `maple_increment_expression` | `tests/increment_expression.mc` | 前后缀 `++/--` 表达式值、嵌套调用、`callassigned` |
 | `maple_nested_control_flow` | `tests/nested_control_flow_call.mc` | `for` / `if` / `while` 嵌套控制流与调用降低 |
 | `maple_nested_increment_call` | `tests/nested_increment_call.mc` | 嵌套 `for`、`i++` 表达式值、ABC handoff、Maple 伴生文件生成 |
+| `maple_ast_scalar_types` 及其余 Maple lowering 回归 | `tests/*.mc` | `if-else`、`while`、`for`、函数调用、嵌套调用、类型输出等 Maple IR 关键模式 |
+| `abc_backend_*` | `tests/basic.mc` | `MINIC_ARK_BACKEND_CMD` 缺失、占位符缺失、外部命令失败等错误处理 |
+| `semantic_*` | 语义样例与脚本内联样例 | `float/char` 类型路径、参数类型、初始化/赋值/返回检查等 |
 
 手工样例覆盖了以下方向：
 
@@ -298,7 +301,7 @@ for_end
 - 作用域正确样例：`semantic_scope_ok.mc`
 - 注释与综合样例：`test.mc`
 
-更细的逐文件覆盖说明见 [docs/testing_report.md](testing_report.md)。
+更细的逐文件覆盖说明见 [docs/testing_report.md](testing_report.md)。当前自动化回归已覆盖 Maple lowering、ABC handoff 错误处理与代表性的语义类型路径，但仍不等于“所有可运行样例全部自动化执行”。
 
 ## 6. 与开题目标的差距
 

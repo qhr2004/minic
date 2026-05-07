@@ -31,9 +31,31 @@
 
 因此，当前 MiniC 项目中的 `MINIC_ARK_BACKEND_CMD` 应被定位为“可配置 handoff 接口”，而不是“已经固定接入官方 Maple IR -> Ark 字节码后端”。
 
-## 2. 本地搜索方法与结果
+## 2. 当前 `--emit-abc` 实际流程
 
-### 2.1 `PATH` 检查
+当前项目中，`--emit-abc` 的流程应明确描述为：
+
+```text
+MiniC -> Maple IR (.mpl) -> external Ark backend command -> output path
+```
+
+这条链路的当前含义如下：
+
+- MiniC 前端和 Maple lowering 在仓库内实现。
+- 编译器会先生成一个 `.mpl` 文件。
+- `MINIC_ARK_BACKEND_CMD` 是外部命令模板，不是仓库内置后端。
+- 命令模板中的 `{input}` 会被替换为生成出来的 `.mpl` 路径。
+- 命令模板中的 `{output}` 会被替换为用户请求的 `.abc` 路径。
+- 编译器随后调用该外部命令，并把结果写到请求的输出路径。
+
+需要特别强调：
+
+- 当前项目没有内置真实 OpenArkCompiler 后端。
+- 因此，如果没有额外配置并验证真实 Ark 后端，`--emit-abc` 产生的 `.abc` 只能被视为 handoff artifact，而不是已经确认可运行的真实 Ark 字节码产物。
+
+## 3. 本地搜索方法与结果
+
+### 3.1 `PATH` 检查
 
 执行命令：
 
@@ -59,7 +81,7 @@ jbc2mpl:
 
 说明这些工具当前都不在系统可执行路径中。
 
-### 2.2 精确文件名搜索
+### 3.2 精确文件名搜索
 
 我对指定目录做了按文件名精确匹配的搜索，目标包括：
 
@@ -81,7 +103,7 @@ jbc2mpl:
 - `/mnt/c/Users`：未命中
 - `/mnt/c/Program Files`：未命中
 
-### 2.3 相关但无关的命中项
+### 3.3 相关但无关的命中项
 
 搜索过程中发现了少量名字相近但并非目标工具的路径：
 
@@ -90,7 +112,7 @@ jbc2mpl:
 
 这些路径不提供 Maple 编译工具，也不提供 Ark 字节码工具，不能作为 `.mpl -> .abc` 后端依据。
 
-## 3. 各工具的本地状态与典型用途
+## 4. 各工具的本地状态与典型用途
 
 由于本机没有找到这些可执行文件，下面表格中的“作用”是工具链常见职责说明，不是本机 `--help` 的实测输出。
 
@@ -105,7 +127,7 @@ jbc2mpl:
 | `mplcg` | 否 | 无 | 否，本机无二进制 | Maple 后端代码生成阶段，通常面向汇编/目标代码方向 |
 | `jbc2mpl` | 否 | 无 | 否，本机无二进制 | Java 字节码到 Maple IR 的转换工具 |
 
-## 4. 是否存在真实的 `.mpl -> .abc` 工具链
+## 5. 是否存在真实的 `.mpl -> .abc` 工具链
 
 当前判断：不存在。
 
@@ -121,11 +143,11 @@ jbc2mpl:
 - OpenHarmony ArkTS 的 `.abc` 通常来自 `es2abc`、`es2panda` 或 `ark_asm`。
 - 因此，当前 MiniC 的 `MINIC_ARK_BACKEND_CMD` 应定位为可配置 handoff，而不是已固定接入官方 `mpl -> abc` 后端。
 
-## 5. 对当前 MiniC 仓库的补充证据
+## 6. 对当前 MiniC 仓库的补充证据
 
 我还检查了仓库中已经存在的 `.abc` 文件，结果表明它们并不像真实 Ark 字节码。
 
-### 5.1 文件类型检查
+### 6.1 文件类型检查
 
 执行：
 
@@ -145,7 +167,7 @@ build/nested_increment_call.mpl:    ASCII text
 
 这说明至少当前这些 `.abc` 文件是文本文件，不像真实二进制字节码容器。
 
-### 5.2 与 `.mpl` 对比
+### 6.2 与 `.mpl` 对比
 
 执行：
 
@@ -161,7 +183,7 @@ cmp -s build/maple_demo.abc build/maple_demo.mpl; echo $?
 
 这表示对应 `.abc` 与 `.mpl` 完全相同，是逐字节一致的复制结果。
 
-### 5.3 十六进制预览
+### 6.3 十六进制预览
 
 执行：
 
@@ -178,9 +200,23 @@ xxd -l 32 build/nested_increment_call.abc
 
 这明显是 Maple 文本内容，而不是真实的 Ark 字节码二进制格式。
 
-## 6. 推荐的 `MINIC_ARK_BACKEND_CMD` 配置
+## 7. 关于 `MINIC_ARK_BACKEND_CMD` 的文档定位
 
-### 6.1 当前本机环境推荐配置
+当前文档中应把 `MINIC_ARK_BACKEND_CMD` 写成：
+
+- 一个外部命令模板
+- 一个把 `.mpl` 交接给外部 Ark 相关工具链的接口
+- 一个需要由使用者在仓库外部配置的命令字符串
+
+应避免把它写成：
+
+- 仓库内置的真实 OpenArkCompiler 后端
+- 已经确认可把当前 `.mpl` 可靠变成真实 `.abc` 的固定命令
+- 已经打通的官方 Maple IR -> ABC 产物链路
+
+## 8. 推荐的 `MINIC_ARK_BACKEND_CMD` 配置说明
+
+### 8.1 当前本机环境推荐配置
 
 如果只是验证 MiniC 的 handoff 机制，推荐使用占位配置：
 
@@ -196,17 +232,22 @@ export MINIC_ARK_BACKEND_CMD='cat {input} > {output}'
 
 它不应被表述为“真实 Ark 后端”。
 
-### 6.2 未来若接入真实后端
+### 8.2 未来若接入真实后端
 
-如果后续补一个真正的封装脚本，推荐配置形式为：
+如果后续确实接入真实后端，`MINIC_ARK_BACKEND_CMD` 也仍应只被描述为“由项目外部提供的真实命令模板”。在当前调查结果下，文档不能虚构具体工具名、不能虚构参数形式，也不能声称已经打通真实 ABC 产物。
 
-```sh
-export MINIC_ARK_BACKEND_CMD='/path/to/minic-ark-wrapper --input {input} --output {output}'
-```
+## 9. 真实接入时仍需确认的内容
 
-但当前本机没有找到任何能够承担这一职责的真实工具或官方包装器。
+如果未来要把当前 handoff 变成真实的 Ark 后端接入，至少还需要确认以下内容：
 
-## 7. 如何验证 `.abc` 文件
+- OpenArkCompiler 或相关工具链中，实际应该调用的工具名称是什么。
+- 该工具是否接受当前 MiniC 生成的 `.mpl` 语法，还是需要额外转换步骤。
+- 该工具生成 `.abc` 的精确参数和调用方式是什么。
+- 生成后的 `.abc` 应如何做运行时验证，或如何借助官方检查工具验证其结构和可执行性。
+
+在这些问题没有被逐项确认之前，文档不能把当前输出写成“真实已打通的 ABC”。
+
+## 10. 如何验证 `.abc` 文件
 
 在本机缺少 `ark_disasm` 等官方检查工具的情况下，建议按下面顺序验证：
 
@@ -226,7 +267,7 @@ export MINIC_ARK_BACKEND_CMD='/path/to/minic-ark-wrapper --input {input} --outpu
 - 先查看 `ark_disasm --help`
 - 再按其官方帮助给出的语法对 `.abc` 做反汇编或结构检查
 
-## 8. 最终判断
+## 11. 最终判断
 
 针对当前这台机器和当前 MiniC 仓库状态，可以明确写成：
 
@@ -238,3 +279,5 @@ export MINIC_ARK_BACKEND_CMD='/path/to/minic-ark-wrapper --input {input} --outpu
 
 - `MINIC_ARK_BACKEND_CMD` 是一个可配置的后端交接点
 - 它当前不是一个已经固定、已经验证的官方 Maple IR -> Ark `.abc` 后端
+- 当前项目没有内置真实 OpenArkCompiler 后端
+- 在未配置并验证真实后端之前，`--emit-abc` 的输出只能被视为 handoff artifact

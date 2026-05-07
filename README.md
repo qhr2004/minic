@@ -25,14 +25,28 @@ Emit Maple IR from MiniC source:
 ./build/minic --emit-maple tests/if_else.mc build/if_else.mpl
 ```
 
-Emit ABC through a configured Ark backend command:
+Emit Graphviz DOT for the parsed AST:
 
 ```sh
-export MINIC_ARK_BACKEND_CMD='your-ark-backend --input {input} --output {output}'
+./build/minic --emit-ast-dot tests/basic.mc build/basic.dot
+dot -Tpng build/basic.dot -o build/basic.png
+```
+
+Emit Graphviz DOT for the lowered control-flow graph:
+
+```sh
+./build/minic --emit-cfg-dot tests/for_loop.mc build/for_loop.cfg.dot
+dot -Tpng build/for_loop.cfg.dot -o build/for_loop.cfg.png
+```
+
+Emit ABC through a configured external Ark backend command template:
+
+```sh
+export MINIC_ARK_BACKEND_CMD='<real external backend command template containing {input} and {output}>'
 ./build/minic --emit-abc tests/if_else.mc build/if_else.abc
 ```
 
-`MINIC_ARK_BACKEND_CMD` is a shell template. The compiler substitutes `{input}` with the generated `.mpl` path and `{output}` with the requested `.abc` path.
+`MINIC_ARK_BACKEND_CMD` is an external command template. The compiler substitutes `{input}` with the generated `.mpl` path and `{output}` with the requested `.abc` path, then invokes that external command. The repository does not include a built-in real OpenArkCompiler backend.
 
 ## Project Structure
 
@@ -65,12 +79,18 @@ TAC IR
   ↓
 Maple IR (.mpl)
   ↓
-Ark Backend Handoff
+External Ark Backend Command
   ↓
-ABC Placeholder / Future Real ABC
+Requested Output Path (.abc or other configured handoff target)
 ```
 
-The current ABC stage depends on `MINIC_ARK_BACKEND_CMD`. The compiler first emits Maple IR, then substitutes `{input}` with the generated `.mpl` path and `{output}` with the requested `.abc` path before invoking the external command template.
+The current `--emit-abc` flow is:
+
+```text
+MiniC -> Maple IR (.mpl) -> external Ark backend command -> output path
+```
+
+The current ABC stage depends on `MINIC_ARK_BACKEND_CMD`. The compiler first emits Maple IR, then substitutes `{input}` with the generated `.mpl` path and `{output}` with the requested `.abc` path before invoking the external command template. If no real Ark backend is configured, any generated `.abc` should be treated only as a handoff artifact.
 
 ## MiniC Feature Support
 
@@ -78,10 +98,10 @@ The current ABC stage depends on `MINIC_ARK_BACKEND_CMD`. The compiler first emi
 | --- | --- | --- |
 | Supported | Core syntax | `int` / `float` / `char` local variables and literals, blocks, `if-else`, `while`, `for`, `return`, function definitions, function calls, prefix/postfix `++` / `--`, and compound assignments |
 | Supported | Semantic checks | Nested scopes, duplicate declaration / duplicate parameter detection, undeclared identifier detection, exact type checking, and `int` conditions for `if` / `while` / `for` |
-| Supported | Output stages | AST dump, string-based TAC IR, pseudo target dump, AST-to-Maple IR lowering, and external ABC handoff through `--emit-abc` |
+| Supported | Output stages | AST dump, AST Graphviz DOT export through `--emit-ast-dot`, CFG Graphviz DOT export through `--emit-cfg-dot`, string-based TAC IR, pseudo target dump, AST-to-Maple IR lowering, and external ABC handoff through `--emit-abc` |
 | Partial | Type-aware IR | AST-to-Maple lowering preserves declared types, but the current TAC IR container is string-based and mostly lowered as `i32` |
 | Partial | Backend integration | `--emit-abc` can invoke an external Ark backend command, but the real toolchain command line is still configured out-of-band via `MINIC_ARK_BACKEND_CMD` and the current `.abc` result may only be a handoff placeholder |
-| Partial | Regression coverage | Control flow, function calls, and increment expressions are covered by `ctest`; float / char paths and several semantic negative cases are currently documented and runnable, but not all are wired into `ctest` |
+| Partial | Regression coverage | `ctest` currently covers Maple lowering, AST-to-Maple scalar type output, ABC handoff error handling, and representative semantic type paths; not every runnable `.mc` sample is wired into `ctest` |
 | Not yet | Richer MiniC data model | Arrays, pointers, strings, structs, global storage, and function prototypes are not implemented |
 | Not yet | Additional statements | `break`, `continue`, `switch`, and `do-while` are not implemented |
 | Not yet | Runtime / library | Standard library functions, built-in I/O, and a fixed runtime environment are not implemented |
@@ -185,19 +205,36 @@ bash tests/assert_maple_contains.sh ./build/minic tests/nested_increment_call.mc
 bash tests/assert_maple_contains.sh --abc ./build/minic tests/nested_increment_call.mc build/nested_increment_call.abc "callassigned &add (dread i32 %y, dread i32 %__inc_old_"
 ```
 
-Direct ABC example:
+Current `--emit-abc` handoff model:
+
+- The compiler lowers MiniC to Maple IR first and writes a `.mpl` file.
+- `MINIC_ARK_BACKEND_CMD` is an external command template, not an in-repo backend implementation.
+- `{input}` is replaced with the generated `.mpl` path.
+- `{output}` is replaced with the requested `.abc` path.
+- The project does not contain a built-in real OpenArkCompiler backend.
+- Without a verified real Ark backend, the resulting `.abc` file must be treated only as a handoff artifact.
+
+`--emit-abc` usage with a real externally provided backend template:
 
 ```sh
-export MINIC_ARK_BACKEND_CMD='your-ark-backend --input {input} --output {output}'
+export MINIC_ARK_BACKEND_CMD='<real external backend command template containing {input} and {output}>'
 ./build/minic --emit-abc tests/nested_increment_call.mc build/nested_increment_call.abc
 ```
+
+Before claiming a real Ark backend integration, the following items still need to be confirmed:
+
+- The actual OpenArkCompiler or related tool name that should be invoked.
+- Whether that tool accepts the current MiniC-generated `.mpl` syntax without an additional translation step.
+- The exact command-line parameters needed to produce an `.abc` output file.
+- How the produced output should be validated at runtime or by official inspection tools.
 
 ## Current Limitations
 
 - TAC IR is weakly typed. AST-to-Maple lowering preserves declared types, but TAC-to-Maple lowering mostly falls back to `i32`.
 - The MiniC subset does not include a standard library or runtime support such as built-in I/O.
-- The real Ark backend command is not fixed in the repository and still depends on `MINIC_ARK_BACKEND_CMD`.
-- The current `.abc` output should be treated as a handoff verification artifact unless a real external Ark backend is configured. See [docs/ark_backend_investigation.md](docs/ark_backend_investigation.md).
+- The real Ark backend command is not fixed in the repository and still depends on the externally supplied `MINIC_ARK_BACKEND_CMD` template.
+- The repository does not include a built-in real OpenArkCompiler backend.
+- The current `.abc` output should be treated as a handoff verification artifact unless a real external Ark backend is configured and validated. See [docs/ark_backend_investigation.md](docs/ark_backend_investigation.md).
 
 ## VS Code Run And Debug
 

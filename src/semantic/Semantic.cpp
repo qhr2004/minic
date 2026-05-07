@@ -299,11 +299,20 @@ ValueType SemanticAnalyzer::analyzeAssignmentExpr(const AssignmentExpr& assignme
 ValueType SemanticAnalyzer::analyzeUnaryExpr(const UnaryExpr& unaryExpr) {
     const ValueType operandType = analyzeExpr(unaryExpr.operand());
 
-    if (!isNumericType(operandType)) {
-        throw SemanticError("operator '" + unaryExpr.op() + "' requires a numeric operand");
+    if (unaryExpr.op() == "-") {
+        if (!isNumericType(operandType)) {
+            throw SemanticError("operator '" + unaryExpr.op() + "' requires a numeric operand");
+        }
+
+        return operandType;
     }
 
-    return operandType;
+    if (unaryExpr.op() == "!") {
+        requireSameType(ValueType::Int, operandType, "logical operator '!'");
+        return ValueType::Int;
+    }
+
+    throw SemanticError("unsupported unary operator '" + unaryExpr.op() + "'");
 }
 
 ValueType SemanticAnalyzer::analyzeIncDecExpr(const IncDecExpr& incDecExpr) {

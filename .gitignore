@@ -1,3 +1,7 @@
+# Maple / Ark artifacts
+*.mpl
+*.abc
+
 # build
 build/
 cmake-build-*/
